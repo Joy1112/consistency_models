@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+FROM nvidia/cuda:11.7.1-cudnn8-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive PIP_PREFER_BINARY=1
 
@@ -23,17 +23,19 @@ RUN apt-get update --fix-missing && \
 RUN apt-get update --fix-missing && apt-get upgrade -y &&  \
     apt-get install -y --no-install-recommends sudo vim iproute2 wget curl iputils-ping net-tools iptables \
     graphviz openssh-server git tzdata libgl1-mesa-glx tmux htop libgl1-mesa-dev libopenmpi-dev \
-    python3.8 python3-pip python3-setuptools python3-wheel && \
+    python3.8 python3.8-dev && \
     ln -s /usr/bin/python3.8* /usr/bin/python && \
     ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shanghai' > /etc/timezone && dpkg-reconfigure tzdata && \
     apt-get autoclean && apt-get autoremove
 
-RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel packaging mpi4py && \
-    pip3 install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu118 && \
-    pip3 install flash-attn==0.2.8
+RUN python3.8 -m pip install --no-cache-dir --upgrade pip setuptools wheel packaging
+
+RUN python3.8 -m pip install --no-cache-dir mpi4py
+RUN python3.8 -m pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu118 && \
+    python3.8 -m pip install flash-attn==0.2.8
 
 COPY ./ /home/consistency_models
 
-RUN pip install -e /home/consistency_models
+RUN python3.8 -m pip install -e /home/consistency_models
 
 WORKDIR /home/consistency_models
