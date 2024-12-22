@@ -2,7 +2,7 @@ FROM nvidia/cuda:11.7.1-cudnn8-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive PIP_PREFER_BINARY=1
 
-COPY deadsnakes-archive-keyring.gpg /usr/share/keyrings/
+COPY ./docker/deadsnakes-archive-keyring.gpg /usr/share/keyrings/
 
 RUN sed -i -e 's/^APT/# APT/' -e 's/^DPkg/# DPkg/' /etc/apt/apt.conf.d/docker-clean
 
@@ -23,15 +23,17 @@ RUN apt-get update --fix-missing && \
 RUN apt-get update --fix-missing && apt-get upgrade -y &&  \
     apt-get install -y --no-install-recommends sudo vim iproute2 wget curl iputils-ping net-tools iptables \
     graphviz openssh-server git tzdata libgl1-mesa-glx tmux htop libgl1-mesa-dev libopenmpi-dev \
-    python3.8 python3.8-dev && \
-    ln -s /usr/bin/python3.8* /usr/bin/python && \
+    python3.8 python3.8-dev python3.8-distutils && \
+    ln -sf /usr/bin/python3.8 /usr/bin/python && \
     ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shanghai' > /etc/timezone && dpkg-reconfigure tzdata && \
     apt-get autoclean && apt-get autoremove
 
-RUN python3.8 -m pip install --no-cache-dir --upgrade pip setuptools wheel packaging
+RUN curl -O https://bootstrap.pypa.io/get-pip.py && \
+    python3.8 get-pip.py && \
+    python3.8 -m pip install --no-cache-dir --upgrade pip setuptools wheel packaging
 
-RUN python3.8 -m pip install --no-cache-dir mpi4py
-RUN python3.8 -m pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu118 && \
+RUN python3.8 -m pip install --no-cache-dir mpi4py && \
+    python3.8 -m pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu118 && \
     python3.8 -m pip install flash-attn==0.2.8
 
 COPY ./ /home/consistency_models
